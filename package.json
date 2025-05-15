@@ -1,14 +1,14 @@
 {
-  "name": "bun-lib-starter",
-  "version": "0.1.1",
+  "name": "@talentir/datev-typescript",
+  "version": "0.0.0",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "require": "./dist/index.js",
-      "import": "./dist/index.mjs",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/index.mjs"
     }
   },
   "description": "",
@@ -30,14 +30,20 @@
   "bugs": "https://github.com/maxam2017/bun-lib-starter/issues",
   "author": "maxam2017 <whk0313@gmail.com>",
   "devDependencies": {
-    "@biomejs/biome": "1.4.1",
+    "@biomejs/biome": "latest",
     "@types/bun": "latest",
-    "dts-bundle-generator": "^9.2.1",
-    "semantic-release": "^22.0.12",
-    "tsup": "^8.0.1",
-    "typescript": "^5.3.3"
+    "dts-bundle-generator": "latest",
+    "semantic-release": "latest",
+    "tsup": "latest",
+    "typescript": "latest"
   },
   "release": {
     "branches": ["main"]
+  },
+  "dependencies": {
+    "@types/big.js": "^6.2.2",
+    "big.js": "^7.0.1",
+    "dayjs": "^1.11.13",
+    "zod": "^3.24.4"
   }
 }
