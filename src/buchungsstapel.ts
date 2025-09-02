@@ -1,5 +1,5 @@
-import { Big } from 'big.js';
 import { z } from 'zod';
+import { createDatevHeaderWithSensibleDefaults } from './header';
 import { addQuotes } from './utils';
 
 export const buchungsstapelSchema = z.object({
@@ -583,30 +583,54 @@ export function createBuchungsstapel(buchungsstapel: Buchungsstapel[]) {
   return `${header}\n${body}`;
 }
 
-export function createBuchungsstapelWithSensibleDefaults(args: {
-  umsatz: Big;
-  sollHabenKennzeichen: 'S' | 'H';
-}) {
-  const defaultEntry: Buchungsstapel = {
-    Umsatz: args.umsatz.toFixed(2).replace('.', ','),
-    'Soll-/Haben-Kennzeichen': args.sollHabenKennzeichen,
-    Konto: '1000',
-    'Gegenkonto (ohne BU-Schlüssel)': '1200',
-    Belegdatum: '0112',
-    'Beleginfo-Art 1': 'Beschreibung',
-    'Beleginfo-Inhalt 1': 'blabla',
-    'Beleginfo-Art 2': 'Umsatzsteuerprozent',
-    'Beleginfo-Art 3': 'Name',
-    'Beleginfo-Inhalt 3': 'blabla',
-    'Beleginfo-Art 5': 'Nettobetrag',
-    'Beleginfo-Inhalt 5': '100',
-    'Beleginfo-Art 6': 'Steuerbetrag',
-    'Beleginfo-Inhalt 6': '19',
-    'Beleginfo-Art 7': 'Leistungsdatum',
-    'Beleginfo-Inhalt 7': '19',
-    'Beleginfo-Art 8': 'Kundennummer',
-    'Beleginfo-Inhalt 8': '119',
+export function createBuchungsstapelWithSensibleDefaults({
+  header,
+  elements,
+}: {
+  header: {
+    formatName: 'Buchungsstapel';
+    wjBeginn: string;
+    beraternummer: string;
+    mandantennummer: string;
+    sachkontenlaenge: number;
+    datumVon: string;
+    datumBis: string;
   };
+  elements: {
+    umsatz: string;
+    sollHabenKennzeichen: 'S' | 'H';
+    konto: string;
+    gegenKonto: string;
+    buSchluessel: string;
+    belegDatum: string;
+    rechungsNummer?: string;
+    belegLink?: string;
+    buchungstext?: string;
+  }[];
+}) {
+  const headerString = createDatevHeaderWithSensibleDefaults({
+    formatName: header.formatName,
+    wjBeginn: header.wjBeginn,
+    beraternummer: header.beraternummer,
+    mandantennummer: header.mandantennummer,
+    sachkontenlaenge: header.sachkontenlaenge,
+    datumVon: header.datumVon,
+    datumBis: header.datumBis,
+  });
 
-  return createBuchungsstapel([defaultEntry, defaultEntry]);
+  const entries = elements.map((arg) => ({
+    Umsatz: arg.umsatz,
+    'Soll-/Haben-Kennzeichen': arg.sollHabenKennzeichen,
+    Konto: arg.konto,
+    'Gegenkonto (ohne BU-Schlüssel)': arg.gegenKonto,
+    'BU-Schlüssel': arg.buSchluessel,
+    Belegdatum: arg.belegDatum,
+    'Belegfeld 1': arg.rechungsNummer,
+    Beleglink: arg.belegLink,
+    Buchungstext: arg.buchungstext,
+  }));
+
+  const body = createBuchungsstapel(entries);
+
+  return `${headerString}${body}`;
 }

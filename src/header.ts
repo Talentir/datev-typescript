@@ -23,11 +23,11 @@ export const datevHeaderSchema = z.object({
     .regex(
       /^([2])([0])([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])(2[0-3]|[01][0-9])([0-5][0-9])([0-5][0-9][0-9][0-9][0-9])$/,
     ),
-  importiert: z.string().default(''),
+  importiert: z.string().optional().transform(addQuotes),
   herkunft: z
     .string()
     .regex(/^\w{0,2}$/)
-    .default('')
+    .optional()
     .transform(addQuotes),
   exportiertVon: z
     .string()
@@ -36,50 +36,57 @@ export const datevHeaderSchema = z.object({
   importiertVon: z
     .string()
     .regex(/^\w{0,25}$/)
-    .default('')
+    .optional()
     .transform(addQuotes),
   beraternummer: z.string().regex(/^(\d{4,6}|\d{7})$/),
   mandantennummer: z.string().regex(/^\d{1,5}$/),
   wjBeginn: z.string().regex(/^([2])([0])([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])$/),
   sachkontenlaenge: z.number().int(),
-  datumVon: z.string().regex(/^([2])([0])([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])$/),
-  datumBis: z.string().regex(/^([2])([0])([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])$/),
+  datumVon: z
+    .string()
+    .regex(/^([2])([0])([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])$/)
+    .optional(),
+  datumBis: z
+    .string()
+    .regex(/^([2])([0])([0-9]{2})(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1])$/)
+    .optional(),
   bezeichnung: z
     .string()
     .regex(/^[\w.-/ ]{0,30}$/)
-    .default('')
+    .optional()
     .transform(addQuotes),
   diktatkuerzel: z
     .string()
     .regex(/^([A-Z]{2}){0,2}$/)
-    .default('')
+    .optional()
     .transform(addQuotes),
-  buchungstyp: z.number().int(),
-  rechnungslegungszweck: z.number().int(),
+  buchungstyp: z.number().int().optional(),
+  rechnungslegungszweck: z.number().int().optional(),
   festschreibung: z.number().int(),
   wkz: z
     .string()
     .regex(/^([A-Z]{3})$/)
+    .optional()
     .transform(addQuotes),
-  reserviert1: z.string().default(''),
-  derivatskennzeichen: z.string().default('').transform(addQuotes),
-  reserviert2: z.string().default(''),
-  reserviert3: z.string().default(''),
+  reserviert1: z.string().optional(),
+  derivatskennzeichen: z.string().optional().transform(addQuotes),
+  reserviert2: z.string().optional(),
+  reserviert3: z.string().optional(),
   sachkontenrahmen: z
     .string()
     .regex(/^(\d{2}){0,2}$/)
-    .default('')
+    .optional()
     .transform(addQuotes),
   idDerBranchenloesung: z
     .string()
     .regex(/^\d{0,4}$/)
-    .default(''),
-  reserviert4: z.string().default(''),
-  reserviert5: z.string().default('').transform(addQuotes),
+    .optional(),
+  reserviert4: z.string().optional(),
+  reserviert5: z.string().optional().transform(addQuotes),
   anwendungsinformation: z
     .string()
     .regex(/^.{0,16}$/)
-    .default('')
+    .optional()
     .transform(addQuotes),
 });
 
@@ -87,7 +94,9 @@ export type DatevHeader = z.input<typeof datevHeaderSchema>;
 
 export function createDatevHeader(header: DatevHeader) {
   const h = datevHeaderSchema.parse(header);
-  const values = Object.values(h);
+
+  const keys = datevHeaderSchema.keyof().options;
+  const values = keys.map((k) => h[k]);
   return `${values.join(';')}\n`;
 }
 
@@ -103,8 +112,8 @@ export function createDatevHeaderWithSensibleDefaults(header: {
   mandantennummer: string;
   wjBeginn: string;
   sachkontenlaenge: number;
-  datumVon: string;
-  datumBis: string;
+  datumVon?: string;
+  datumBis?: string;
 }) {
   const formatKategorie = {
     'Debitoren/Kreditoren': 16,
@@ -126,6 +135,14 @@ export function createDatevHeaderWithSensibleDefaults(header: {
 
   const erzeugtAm = dayjs().format('YYYYMMDDHHmmssSSS');
 
+  // For Debitoren/Kreditoren, exclude these fields
+  const isDebitorenKreditoren = header.formatName === 'Debitoren/Kreditoren';
+
+  // Validate that datumVon and datumBis are provided when needed
+  if (!isDebitorenKreditoren && (!header.datumVon || !header.datumBis)) {
+    throw new Error(`datumVon and datumBis are required for format "${header.formatName}"`);
+  }
+
   return createDatevHeader({
     kennzeichen: 'EXTF',
     versionsnummer: 700,
@@ -133,30 +150,16 @@ export function createDatevHeaderWithSensibleDefaults(header: {
     formatname: header.formatName,
     formatversion: formatVersion,
     erzeugtAm,
-    importiert: '',
-    herkunft: '',
     exportiertVon: 'Talentir',
-    importiertVon: '',
     beraternummer: header.beraternummer,
     mandantennummer: header.mandantennummer,
     wjBeginn: header.wjBeginn,
     sachkontenlaenge: header.sachkontenlaenge,
-    datumVon: header.datumVon,
-    datumBis: header.datumBis,
-    bezeichnung: '',
-    diktatkuerzel: '',
-    buchungstyp: 1,
-    rechnungslegungszweck: 0,
+    datumVon: isDebitorenKreditoren ? undefined : header.datumVon,
+    datumBis: isDebitorenKreditoren ? undefined : header.datumBis,
+    buchungstyp: isDebitorenKreditoren ? undefined : 1,
+    rechnungslegungszweck: isDebitorenKreditoren ? undefined : 0,
     festschreibung: 0,
-    wkz: 'EUR',
-    reserviert1: '',
-    derivatskennzeichen: '',
-    reserviert2: '',
-    reserviert3: '',
-    sachkontenrahmen: '',
-    idDerBranchenloesung: '',
-    reserviert4: '',
-    reserviert5: '',
-    anwendungsinformation: '',
+    wkz: isDebitorenKreditoren ? undefined : 'EUR',
   });
 }

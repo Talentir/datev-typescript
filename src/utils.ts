@@ -1,1 +1,1 @@
-export const addQuotes = (value?: string) => (value != null ? `"${value}"` : '""');
+export const addQuotes = (value?: string) => (value != null ? `"${value.replace(/"/g, '""')}"` : '""');

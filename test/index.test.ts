@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import Big from 'big.js';
-import { createBuchungsstapelWithSensibleDefaults } from '../src';
+import { createBuchungsstapelWithSensibleDefaults, createDebitorenKreditorenWithSensibleDefaults } from '../src';
 import { writeStringToFile } from '../src/file';
 import { createDatevHeader, createDatevHeaderWithSensibleDefaults } from '../src/header';
 
@@ -55,29 +54,61 @@ describe('should', () => {
   });
 });
 
-function bla(bla?: string) {
-  return ['asdf', bla, 'asdf'].join(';');
-}
-// file.ts
-describe('file', async () => {
-  it.only('should write to file', async () => {
-    const header = createDatevHeaderWithSensibleDefaults({
-      formatName: 'Buchungsstapel',
-      wjBeginn: '20240101',
-      beraternummer: '1234567',
-      mandantennummer: '12345',
-      sachkontenlaenge: 4,
-      datumVon: '20240101',
-      datumBis: '20241231',
+describe.only('Create file', async () => {
+  it('Create Buchungsstapel with sensible defaults', async () => {
+    const fileContent = createBuchungsstapelWithSensibleDefaults({
+      header: {
+        formatName: 'Buchungsstapel',
+        wjBeginn: '20240101',
+        beraternummer: '1234567',
+        mandantennummer: '12345',
+        sachkontenlaenge: 4,
+        datumVon: '20240101',
+        datumBis: '20241231',
+      },
+      elements: [
+        {
+          umsatz: '0,01',
+          sollHabenKennzeichen: 'S',
+          konto: '1000',
+          gegenKonto: '1200',
+          buSchluessel: '0506',
+          belegDatum: '0112',
+          rechungsNummer: 'Rechnungsnummer',
+          buchungstext: 'Buchungstext',
+          belegLink: 'Beleg"link"',
+        },
+      ],
     });
-
-    const buchungsstapel = createBuchungsstapelWithSensibleDefaults({
-      umsatz: new Big('0.01'),
-      sollHabenKennzeichen: 'S',
-    });
-
-    const fileContent = `${header}${buchungsstapel}`;
 
     await writeStringToFile(fileContent, '../datev-demos/EXTF_Buchungsstapel.csv');
+  });
+
+  it('Create Debitoren/Kreditoren with sensible defaults', async () => {
+    const fileContent = createDebitorenKreditorenWithSensibleDefaults({
+      header: {
+        formatName: 'Debitoren/Kreditoren',
+        wjBeginn: '20240101',
+        beraternummer: '1234567',
+        mandantennummer: '12345',
+        sachkontenlaenge: 4,
+        datumVon: '20240101',
+        datumBis: '20241231',
+      },
+      elements: [
+        {
+          konto: '1000',
+          firmenname: 'Talentir GmbH',
+          uidNumber: 'ATU910002001',
+          countryCode: 'AT',
+          addressLine1: 'Talentir GmbH',
+          addressLine2: 'Wien',
+          city: 'Wien',
+          postalCode: '1010',
+        },
+      ],
+    });
+
+    await writeStringToFile(fileContent, '../datev-demos/EXTF_Debitoren_Kreditoren.csv');
   });
 });

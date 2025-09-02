@@ -41,9 +41,7 @@
     "branches": ["main"]
   },
   "dependencies": {
-    "@types/big.js": "^6.2.2",
-    "big.js": "^7.0.1",
-    "dayjs": "^1.11.13",
-    "zod": "^3.24.4"
+    "dayjs": "^1.11.18",
+    "zod": "^4.1.5"
   }
 }
