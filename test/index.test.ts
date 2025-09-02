@@ -54,7 +54,7 @@ describe('should', () => {
   });
 });
 
-describe.only('Create file', async () => {
+describe('Create file', async () => {
   it('Create Buchungsstapel with sensible defaults', async () => {
     const fileContent = createBuchungsstapelWithSensibleDefaults({
       header: {
@@ -92,8 +92,6 @@ describe.only('Create file', async () => {
         beraternummer: '1234567',
         mandantennummer: '12345',
         sachkontenlaenge: 4,
-        datumVon: '20240101',
-        datumBis: '20241231',
       },
       elements: [
         {
