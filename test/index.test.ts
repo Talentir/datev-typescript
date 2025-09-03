@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'bun:test';
-import { createBuchungsstapelWithSensibleDefaults, createDebitorenKreditorenWithSensibleDefaults } from '../src';
+import {
+  createBuchungsstapelWithSensibleDefaults,
+  createDebitorenKreditorenWithSensibleDefaults,
+  generateDatevInvoiceXml,
+} from '../src';
 import { writeStringToFile } from '../src/file';
 import { createDatevHeader, createDatevHeaderWithSensibleDefaults } from '../src/header';
 
 describe('should', () => {
   it('test header', () => {
-    const header = createDatevHeader({
+    createDatevHeader({
       kennzeichen: 'EXTF',
       versionsnummer: 700,
       formatkategorie: 16,
@@ -39,7 +43,7 @@ describe('should', () => {
       anwendungsinformation: 'Test',
     });
 
-    const header2 = createDatevHeaderWithSensibleDefaults({
+    createDatevHeaderWithSensibleDefaults({
       formatName: 'Buchungsstapel',
       wjBeginn: '20240101',
       beraternummer: '1234567',
@@ -48,9 +52,6 @@ describe('should', () => {
       datumVon: '20240101',
       datumBis: '20241231',
     });
-
-    console.log(header);
-    console.log(header2);
   });
 });
 
@@ -108,5 +109,17 @@ describe('Create file', async () => {
     });
 
     await writeStringToFile(fileContent, '../datev-demos/EXTF_Debitoren_Kreditoren.csv');
+  });
+
+  it('Generate demo XML for DATEV invoice archive', async () => {
+    const xmlContent = generateDatevInvoiceXml({
+      documents: [
+        { uuid: 'c17b594a-95ee-50e0-a10a-54797b110caf', fileName: 'invoice_001.pdf' },
+        { uuid: 'd28c695b-a6ff-61f1-b21b-65808c221dcf', fileName: 'receipt_002.pdf' },
+        { uuid: 'e39d796c-b7ff-72f2-c31c-76819d332e0f', fileName: 'document_003.xml' },
+      ],
+    });
+
+    await writeStringToFile(xmlContent, '../datev-demos/document.xml');
   });
 });
